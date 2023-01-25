@@ -7,3 +7,6 @@ modules/
 tools/
 #comment if you want to commit your model
 *.hex
+
+# workspace file
+*.code-workspace
