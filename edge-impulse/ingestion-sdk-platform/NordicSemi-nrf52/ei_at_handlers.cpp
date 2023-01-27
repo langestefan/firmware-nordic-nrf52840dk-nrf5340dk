@@ -1,4 +1,4 @@
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include <power/reboot.h>
 #include "ei_at_handlers.h"
 #include "ei_device_nordic_nrf52.h"

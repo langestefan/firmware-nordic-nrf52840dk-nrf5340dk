@@ -30,8 +30,8 @@
 #include <cstdarg>
 #include "math.h"
 
-#include <sys/printk.h>
-#include <drivers/uart.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/drivers/uart.h>
 
 #include "ble_nus.h"
 

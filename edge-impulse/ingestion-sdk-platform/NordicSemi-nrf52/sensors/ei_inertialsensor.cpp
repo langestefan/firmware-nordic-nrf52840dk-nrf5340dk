@@ -29,10 +29,8 @@
 #include "ei_device_nordic_nrf52.h"
 #include "firmware-sdk/sensor_aq.h"
 
-#include <drivers/i2c.h>
-
-
-#include <zephyr.h>
+#include <zephyr/drivers/i2c.h>
+#include <zephyr/kernel.h>
 
 /* Constant defines -------------------------------------------------------- */
 #define CONVERT_G_TO_MS2    9.80665f

@@ -25,10 +25,10 @@
 
 /* Include ----------------------------------------------------------------- */
 #include "ei_device_info.h"
-#include <zephyr.h>
-#include <device.h>
-#include <devicetree.h>
-#include <drivers/gpio.h>
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/devicetree.h>
+#include <zephyr/drivers/gpio.h>
 
 #include <cstdio>
 

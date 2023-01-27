@@ -1,8 +1,8 @@
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 //#include "ei_run_classifier.h"
 #include "edge-impulse-sdk/dsp/numpy.hpp"
 
-#include <sys/printk.h>
+#include <zephyr/sys/printk.h>
 #include "ei_device_nordic_nrf52.h"
 #include "ei_zephyr_flash_commands.h"
 #include "ei_main.h"

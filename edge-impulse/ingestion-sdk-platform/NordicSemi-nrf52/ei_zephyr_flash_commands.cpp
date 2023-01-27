@@ -1,9 +1,9 @@
 
 /* Include ----------------------------------------------------------------- */
-#include <zephyr.h>
-#include <drivers/flash.h>
-#include <storage/flash_map.h>
-#include <device.h>
+#include <zephyr/kernel.h>
+#include <zephyr/drivers/flash.h>
+#include <zephyr/storage/flash_map.h>
+#include <zephyr/device.h>
 
 #include "ei_zephyr_flash_commands.h"
 #include "ei_device_nordic_nrf52.h"

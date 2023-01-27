@@ -23,7 +23,7 @@
 #include "../ei_classifier_porting.h"
 #if EI_PORTING_ZEPHYR == 1
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include <stdio.h>
 #include <stdlib.h>
 
