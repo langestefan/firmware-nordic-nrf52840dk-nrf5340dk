@@ -46,9 +46,9 @@ const static struct device *flash_dev;
  */
 void create_flash_device()
 {
-#if SAMPLE_MEMORY == SERIAL_FLASH
+    #if SAMPLE_MEMORY == SERIAL_FLASH
         flash_dev = DEVICE_DT_GET(EXTERNAL_FLASH_DEVICE);
-#endif
+    #endif
 }
 
 
@@ -264,7 +264,6 @@ void zephyr_flash_write1(uint8_t * buf)
     // uint32_t buf_array_1[4] = { TEST_DATA_WORD_0, TEST_DATA_WORD_1,
     //                 TEST_DATA_WORD_2, TEST_DATA_WORD_3 };
 
-    flash_write_protection_set(flash_dev, false);
     for (int i = 0; i < 1; i++) {
         offset = + i;
         ei_printf("   Attempted to write 0x%x at 0x%x\n", temp, offset);
@@ -278,8 +277,7 @@ void zephyr_flash_read()
 {
     int rc;
     ei_printf("\nTest 1: Flash erase\n");
-    flash_write_protection_set(flash_dev, false);
-
+    
     rc =  ei_zephyr_flash_erase_sampledata(0, 4096);
     //rc = flash_erase_sectors(EI_DATA_SAMPLES_OFFSET, 1);
     if (rc != 0) {
@@ -331,16 +329,12 @@ void zephyr_flash_read()
  */
 static int flash_erase_sectors(uint32_t startAddress, uint32_t nSectors)
 {
-    flash_write_protection_set(flash_dev, false);
-
     if (flash_erase(flash_dev,
                     startAddress,
                     ZEPHYR_FLASH_SECTOR_SIZE * nSectors) != 0) {
-        flash_write_protection_set(flash_dev, true);
         return ZEPHYR_FLASH_CMD_ERASE_ERROR;
     }
     else {
-        flash_write_protection_set(flash_dev, true);
         return ZEPHYR_FLASH_CMD_OK;
     }
 }
@@ -383,13 +377,6 @@ static int flash_write_data(uint8_t *buffer,
                             uint32_t num_bytes)
 {
     int err = 0;
-    //ei_printf("%s: 0x%x 0x%x 0x%x 0x%x\n", __FUNCTION__, buffer[0], buffer[1], buffer[2], buffer[3]);
-    err = flash_write_protection_set(flash_dev, false);
-    if (err != 0) {
-        return ZEPHYR_FLASH_CMD_READ_ERROR;
-    }
-    //ei_printf("flash_write_protection_set: err: %d\n", err);
-
     err = flash_write(flash_dev, address_offset, buffer, num_bytes);
 
     if (err != 0) {
