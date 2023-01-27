@@ -690,7 +690,7 @@ int BOARD_ledInit(void)
 {
     int ret = 0;
 
-    led_dev = device_get_binding(LED_DEVICE);
+    led_dev = DEVICE_DT_GET(LED_DEVICE);
     if(led_dev == NULL)
     {
         return EIO;
@@ -737,7 +737,7 @@ int uart_init(void)
 {
 	int err = 0;
 
-	uart = device_get_binding(DT_LABEL(DT_NODELABEL(uart0)));
+	uart = DEVICE_DT_GET(DT_NODELABEL(uart0));
 	if (!uart) {
 		return -ENXIO;
 	}

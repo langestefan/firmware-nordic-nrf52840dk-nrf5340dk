@@ -47,10 +47,7 @@ const static struct device *flash_dev;
 void create_flash_device()
 {
 #if SAMPLE_MEMORY == SERIAL_FLASH
-    flash_dev = device_get_binding(EXTERNAL_FLASH_DEVICE);
-    ei_printf("Using flash device: " EXTERNAL_FLASH_DEVICE "\n");
-    //ei_printf("Flash device size: %d bytes\n", ZEPHYR_TOTAL_FLASH_SIZE);
-    //ei_printf("Flash device sector size: %d bytes\n", EXTERNAL_FLASH_DEVICE_SECTOR_SIZE);
+        flash_dev = DEVICE_DT_GET(EXTERNAL_FLASH_DEVICE);
 #endif
 }
 

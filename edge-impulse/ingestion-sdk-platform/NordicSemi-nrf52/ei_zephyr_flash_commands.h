@@ -21,7 +21,7 @@ typedef enum
 #define MX25R_RETRY                         (10000)/**!< Number of retries for SPI Flash */
 
 /* Flash device label, that is fetched from device tree */
-#define EXTERNAL_FLASH_DEVICE               DT_LABEL(DT_INST(0, nordic_qspi_nor))           /*< configured in device tree of the board >*/
+#define EXTERNAL_FLASH_DEVICE               DT_INST(0, nordic_qspi_nor)           /*< configured in device tree of the board >*/
 #define EXTERNAL_FLASH_DEVICE_SIZE          DT_PROP(DT_INST(0, nordic_qspi_nor), size)      /*< configured in device tree of the board >*/
 #define EXTERNAL_FLASH_DEVICE_SECTOR_SIZE   CONFIG_NORDIC_QSPI_NOR_FLASH_LAYOUT_PAGE_SIZE   /*< configured in prj.conf of the board >*/
 
