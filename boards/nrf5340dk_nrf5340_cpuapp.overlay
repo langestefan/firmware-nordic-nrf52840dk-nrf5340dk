@@ -42,3 +42,12 @@ i2c1: &i2c1 {
 		reg = <0x53>;
 	};
 };
+
+// /* These two lines are probably not needed below as I'm not using i2c0 */
+// &spi0 {
+//     status = "disabled";
+// };
+
+// &pwm0 {
+//     status = "disabled";
+// };
