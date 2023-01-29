@@ -67,7 +67,7 @@ stmdev_ctx_t dev_ctx;
 sampler_callback  cb_sampler;
 
 static float acceleration_g[N_AXIS_SAMPLED];
-int16_t data_raw_acceleration[N_AXIS_SAMPLED];
+struct sensor_value raw_accel[N_AXIS_SAMPLED];
 
 int32_t sample_interval_real_us = 0;
 const struct device *i2c_dev;
@@ -80,11 +80,9 @@ static bool device_init_correctly = false;
  */
 bool ei_inertial_init(void)
 {
-    uint8_t wai;
+    i2c_dev = DEVICE_DT_GET(DT_NODELABEL(adxl345));
 
-    i2c_dev = device_get_binding(I2C_DEV);
-    if (!i2c_dev)
-    {
+    if (i2c_dev == NULL) {
         ei_printf("No device I2C found; did initialization fail?\n");
         return false;
     }
@@ -93,30 +91,8 @@ bool ei_inertial_init(void)
     dev_ctx.read_reg = platform_read;
     dev_ctx.handle = &i2c_dev;
 
-    /* check chip ID */
-    if(iis2dlpc_device_id_get(&dev_ctx, &wai) < 0){
-        return false;
-    }
-    
-    /* reset device */
-	if (iis2dlpc_reset_set(&dev_ctx, PROPERTY_ENABLE) < 0) { //PROPERTY_ENABLE = 1 
-		return false;
-	}
+    /* delay */
 	EiDevice.delay_ms(100);
-
-    /* set power mode */
-	if(  iis2dlpc_power_mode_set(&dev_ctx, IIS2DLPC_HIGH_PERFORMANCE) < 0){
-		return false;
-	}
-
-/* set default odr and full scale for acc */
-	if(iis2dlpc_data_rate_set(&dev_ctx, IIS2DLPC_XL_ODR_1k6Hz) < 0){ //CONFIG_IIS2DLPC_ODR_1600=y
-		return false;
-	}
-
-	if(iis2dlpc_full_scale_set(&dev_ctx, IIS2DLPC_2g) < 0){  //CONFIG_IIS2DLPC_ACCEL_RANGE_2G=y
-		return false;
-	}
 
     ei_printf("Sensor " ACCEL_DEVICE_LABEL " init OK\n");
     device_init_correctly = true;
@@ -131,30 +107,46 @@ bool ei_inertial_init(void)
  */
 int ei_inertial_read_data(void)
 {
-    uint8_t reg;
     int ret_val = 0;
 
-    if(i2c_dev){
-        iis2dlpc_flag_data_ready_get(&dev_ctx, &reg);
+    if(i2c_dev) {
 
-        if(reg){
-            /* Read acceleration data */
-            memset(data_raw_acceleration, 0x00, 3 * sizeof(int16_t));
-            iis2dlpc_acceleration_raw_get(&dev_ctx, data_raw_acceleration);
-            acceleration_g[0] = (iis2dlpc_from_fs2_lp1_to_mg(
-                                data_raw_acceleration[0]) * 9.81f) / 1000.f;
-            acceleration_g[1] = (iis2dlpc_from_fs2_lp1_to_mg(
-                                data_raw_acceleration[1]) * 9.81f) / 1000.f;
-            acceleration_g[2] = (iis2dlpc_from_fs2_lp1_to_mg(
-                                data_raw_acceleration[2]) * 9.81f) / 1000.f;
+        /* Fetch sample, make sure it is ready for reading */
+        if (sensor_sample_fetch(i2c_dev) < 0) {
+			printf("Sample fetch error\n");
+			return 1;
+		}
 
-            cb_sampler((const void *)&acceleration_g[0], SIZEOF_N_AXIS_SAMPLED);
+        /* Read acceleration data */
+        if (sensor_channel_get(i2c_dev, SENSOR_CHAN_ACCEL_X, &raw_accel[0]) < 0) {
+			printf("Channel get error\n");
+			return -1;
+		}
 
-            k_usleep(sample_interval_real_us);
-        }
+		if (sensor_channel_get(i2c_dev, SENSOR_CHAN_ACCEL_Y, &raw_accel[1]) < 0) {
+			printf("Channel get error\n");
+			return -1;
+		}
+
+		if (sensor_channel_get(i2c_dev, SENSOR_CHAN_ACCEL_Z, &raw_accel[2]) < 0) {
+			printf("Channel get error\n");
+			return -1;
+		}
+
+        acceleration_g[0] = (float) sensor_value_to_double(&raw_accel[0]);
+        acceleration_g[1] = (float) sensor_value_to_double(&raw_accel[1]);
+        acceleration_g[2] = (float) sensor_value_to_double(&raw_accel[2]);
+        ei_printf("Sensor read OK\n");
+
+        cb_sampler((const void *)&acceleration_g[0], SIZEOF_N_AXIS_SAMPLED);
+
+        // k_usleep(sample_interval_real_us);
+        EiDevice.delay_ms((uint32_t)(sample_interval_real_us / 1000));
     }
-    //if there is no sensor initialized send all zeros
+
+    
     else {
+        ei_printf("Sensor read ERROR\n");
         acceleration_g[0] = 0.0f;
         acceleration_g[1] = 0.0f;
         acceleration_g[2] = 0.0f;
@@ -241,7 +233,7 @@ static int32_t platform_write(void *handle, uint8_t reg,
     uint8_t temp_buf[10] = {0};
     temp_buf[0] = reg;
     memcpy(&temp_buf[1], bufp, len);
-    return i2c_write(i2c_dev, temp_buf, len+1, IIS2DLPC_ADDRESS);;
+    return i2c_write(i2c_dev, temp_buf, len+1, ADXL345_ADDRESS);;
 }
 
 /*
@@ -257,7 +249,7 @@ static int32_t platform_write(void *handle, uint8_t reg,
 static int32_t platform_read(void *handle, uint8_t reg, uint8_t *bufp,
                              uint16_t len)
 {
-    return i2c_write_read(i2c_dev, IIS2DLPC_ADDRESS, &reg, 1, bufp, len);
+    return i2c_write_read(i2c_dev, ADXL345_ADDRESS, &reg, 1, bufp, len);
 }
 
 /* Static functions -------------------------------------------------------- */

@@ -30,8 +30,8 @@
 #include <zephyr/drivers/sensor.h>
 #include "iis2dlpc_reg.h"
 
-#define ACCEL_DEVICE_LABEL "IIS2DLPC"
-#define IIS2DLPC_ADDRESS    0x19
+#define ACCEL_DEVICE_LABEL "ADXL345"
+#define ADXL345_ADDRESS    0x53
 
 /** Number of axis used and sample data format */
 typedef float sample_format_t;
