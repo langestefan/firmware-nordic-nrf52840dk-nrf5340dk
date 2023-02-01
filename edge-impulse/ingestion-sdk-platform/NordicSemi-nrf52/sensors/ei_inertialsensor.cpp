@@ -73,6 +73,18 @@ int32_t sample_interval_real_us = 0;
 const struct device *i2c_dev;
 static bool device_init_correctly = false;
 
+struct env_sensor {
+	enum sensor_channel channel;
+	const struct device *dev;
+	struct k_spinlock lock;
+};
+
+/** Sensor struct for the high-G accelerometer */
+static struct env_sensor accel_sensor = {
+	.channel = SENSOR_CHAN_ACCEL_XYZ,
+	.dev = DEVICE_DT_GET(DT_NODELABEL(adxl345)),
+};
+
 /**
  * @brief      Setup I2C config and accelerometer convert value
  *
@@ -80,7 +92,7 @@ static bool device_init_correctly = false;
  */
 bool ei_inertial_init(void)
 {
-    i2c_dev = DEVICE_DT_GET(DT_NODELABEL(adxl345));
+    i2c_dev = accel_sensor.dev;
 
     if (i2c_dev == NULL) {
         ei_printf("No device I2C found; did initialization fail?\n");
@@ -100,16 +112,24 @@ bool ei_inertial_init(void)
     return true;
 }
 
+
 /**
  * @brief      Get data from sensor, convert and call callback to handle
  *
  * @return     0 on success, non-zero on error
  */
-int ei_inertial_read_data(void)
+int ei_inertial_read_data(void) 
 {
     int ret_val = 0;
+    i2c_dev = accel_sensor.dev;
 
     if(i2c_dev) {
+
+        /* Check if device is ready */
+        if (!device_is_ready(i2c_dev)) {
+            printf("Error, device not ready\n");
+            return 1;
+        }
 
         /* Fetch sample, make sure it is ready for reading */
         if (sensor_sample_fetch(i2c_dev) < 0) {
@@ -117,34 +137,24 @@ int ei_inertial_read_data(void)
 			return 1;
 		}
 
-        /* Read acceleration data */
-        if (sensor_channel_get(i2c_dev, SENSOR_CHAN_ACCEL_X, &raw_accel[0]) < 0) {
+        /* Get sensor data */
+        ret_val = sensor_channel_get(i2c_dev, accel_sensor.channel, &raw_accel[0]);
+		if (ret_val) {
 			printf("Channel get error\n");
-			return -1;
+			return 1;
 		}
-
-		if (sensor_channel_get(i2c_dev, SENSOR_CHAN_ACCEL_Y, &raw_accel[1]) < 0) {
-			printf("Channel get error\n");
-			return -1;
-		}
-
-		if (sensor_channel_get(i2c_dev, SENSOR_CHAN_ACCEL_Z, &raw_accel[2]) < 0) {
-			printf("Channel get error\n");
-			return -1;
-		}
-
+             
         acceleration_g[0] = (float) sensor_value_to_double(&raw_accel[0]);
         acceleration_g[1] = (float) sensor_value_to_double(&raw_accel[1]);
         acceleration_g[2] = (float) sensor_value_to_double(&raw_accel[2]);
         ei_printf("Sensor read OK\n");
+        ei_printf("X: %f, Y: %f, Z: %f\n", acceleration_g[0], acceleration_g[1], acceleration_g[2]);
 
+        /* Call sampler to push data to EI*/
         cb_sampler((const void *)&acceleration_g[0], SIZEOF_N_AXIS_SAMPLED);
-
-        // k_usleep(sample_interval_real_us);
         EiDevice.delay_ms((uint32_t)(sample_interval_real_us / 1000));
     }
 
-    
     else {
         ei_printf("Sensor read ERROR\n");
         acceleration_g[0] = 0.0f;
